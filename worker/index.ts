@@ -39,7 +39,7 @@ interface ExecutionContext {
 // dangerouslyAllowSVG: true in next.config.js and uncomment below:
 // const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
-const worker = {const BOOKING_RECIPIENTS = [
+const BOOKING_RECIPIENTS = [
   "cuongtd.hcm@gmail.com",
   "thecouplespavn@gmail.com",
   "maimummim1989@gmail.com",
@@ -237,7 +237,8 @@ async function handleBookingRequest(
     );
   }
 }
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+const worker = {  
+async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === "/_vinext/image") {async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {

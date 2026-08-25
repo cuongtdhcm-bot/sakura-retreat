@@ -1,28 +1,30 @@
-/** Cloudflare Worker entry point for the vinext-starter template. */
-import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
+/** Cloudflare Worker entry point for SĀKURĀ RETREAT. */
+import {
+  handleImageOptimization,
+  DEFAULT_DEVICE_SIZES,
+  DEFAULT_IMAGE_SIZES,
+} from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 
 interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
-   EMAIL: {
+  EMAIL: {
     send(message: {
       to: string[];
-      from: {
-        email: string;
-        name?: string;
-      };
+      from: { email: string; name?: string };
       subject: string;
       html?: string;
       text?: string;
-    }): Promise<{
-      messageId: string;
-    }>;
+    }): Promise<{ messageId?: string }>;
   };
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
-        output(options: { format: string; quality: number }): Promise<{ response(): Response }>;
+        output(options: {
+          format: string;
+          quality: number;
+        }): Promise<{ response(): Response }>;
       };
     };
   };
@@ -32,12 +34,6 @@ interface ExecutionContext {
   waitUntil(promise: Promise<unknown>): void;
   passThroughOnException(): void;
 }
-
-// Image security config. SVG sources with .svg extension auto-skip the
-// optimization endpoint on the client side (served directly, no proxy).
-// To route SVGs through the optimizer (with security headers), set
-// dangerouslyAllowSVG: true in next.config.js and uncomment below:
-// const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
 const BOOKING_RECIPIENTS = [
   "cuongtd.hcm@gmail.com",
@@ -59,7 +55,7 @@ async function handleBookingRequest(
   env: Env,
 ): Promise<Response> {
   try {
-    const data = await request.json() as {
+    const data = (await request.json()) as {
       guestName?: string;
       guestPhone?: string;
       guestNote?: string;
@@ -100,34 +96,27 @@ async function handleBookingRequest(
       );
     }
 
-    const currency = (value: number | undefined) =>
+    const formatMoney = (value: number | undefined) =>
       new Intl.NumberFormat("vi-VN").format(Number(value ?? 0));
 
-    const subject =
-      `[SĀKURĀ RETREAT] Đặt lịch mới — ${guestName} — ${data.formattedDate ?? data.date} ${data.time}`;
+    const bookingDate = data.formattedDate ?? data.date;
+    const subject = `[SĀKURĀ RETREAT] Đặt lịch mới — ${guestName} — ${bookingDate} ${data.time}`;
 
     const text = [
       "SĀKURĀ RETREAT — YÊU CẦU ĐẶT LỊCH MỚI",
       "",
       `Khách hàng: ${guestName}`,
       `Điện thoại: ${guestPhone}`,
-      "",
       `Dịch vụ: ${data.serviceName}`,
-      data.serviceEnglishName
-        ? `Tên tiếng Anh: ${data.serviceEnglishName}`
-        : "",
+      data.serviceEnglishName ? `English: ${data.serviceEnglishName}` : "",
       data.serviceId ? `Mã dịch vụ: ${data.serviceId}` : "",
       `Thời lượng: ${data.duration ?? ""} phút`,
-      `Giá niêm yết: ${currency(data.listedPrice)} VND`,
-      `Giá website: ${currency(data.websitePrice)} VND`,
-      "",
-      `Ngày mong muốn: ${data.formattedDate ?? data.date}`,
-      `Giờ mong muốn: ${data.time}`,
-      "",
-      guestNote ? `Lưu ý của khách: ${guestNote}` : "Lưu ý của khách: Không có",
-      "",
+      `Giá niêm yết: ${formatMoney(data.listedPrice)} VND`,
+      `Giá website: ${formatMoney(data.websitePrice)} VND`,
+      `Ngày: ${bookingDate}`,
+      `Giờ: ${data.time}`,
+      `Ghi chú: ${guestNote || "Không có"}`,
       `Ngôn ngữ website: ${data.language === "en" ? "English" : "Tiếng Việt"}`,
-      `Thời điểm gửi: ${new Date().toISOString()}`,
       "",
       "Vui lòng kiểm tra lịch và liên hệ khách để xác nhận.",
     ]
@@ -136,77 +125,16 @@ async function handleBookingRequest(
 
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#233228">
-        <div style="padding:28px;background:#31483a;color:#fff">
-          <div style="font-size:12px;letter-spacing:2px">SĀKURĀ RETREAT</div>
-          <h1 style="margin:10px 0 0;font-size:24px">
-            Yêu cầu đặt lịch mới
-          </h1>
-        </div>
-
-        <div style="padding:28px;border:1px solid #e5e5df;border-top:0">
-          <h2 style="font-size:18px;margin-top:0">Thông tin khách hàng</h2>
-
-          <p><strong>Khách:</strong> ${escapeHtml(guestName)}</p>
-          <p>
-            <strong>Điện thoại:</strong>
-            <a href="tel:${escapeHtml(guestPhone)}">
-              ${escapeHtml(guestPhone)}
-            </a>
-          </p>
-
-          <hr style="border:0;border-top:1px solid #e5e5df;margin:24px 0">
-
-          <h2 style="font-size:18px">Thông tin lịch hẹn</h2>
-
-          <p><strong>Dịch vụ:</strong> ${escapeHtml(data.serviceName)}</p>
-
-          ${
-            data.serviceEnglishName
-              ? `<p><strong>English:</strong> ${escapeHtml(data.serviceEnglishName)}</p>`
-              : ""
-          }
-
-          ${
-            data.serviceId
-              ? `<p><strong>Mã dịch vụ:</strong> ${escapeHtml(data.serviceId)}</p>`
-              : ""
-          }
-
-          <p><strong>Thời lượng:</strong> ${escapeHtml(data.duration)} phút</p>
-
-          <p>
-            <strong>Giá niêm yết:</strong>
-            ${currency(data.listedPrice)} VND
-          </p>
-
-          <p>
-            <strong>Giá ưu đãi website:</strong>
-            ${currency(data.websitePrice)} VND
-          </p>
-
-          <p>
-            <strong>Ngày:</strong>
-            ${escapeHtml(data.formattedDate ?? data.date)}
-          </p>
-
-          <p>
-            <strong>Giờ:</strong>
-            ${escapeHtml(data.time)}
-          </p>
-
-          <hr style="border:0;border-top:1px solid #e5e5df;margin:24px 0">
-
-          <h2 style="font-size:18px">Lưu ý</h2>
-
-          <p>
-            ${guestNote ? escapeHtml(guestNote) : "Khách không để lại ghi chú."}
-          </p>
-
-          <div style="margin-top:28px;padding:16px;background:#f5f4ef">
-            <strong>Cần xác nhận lịch</strong><br>
-            Vui lòng kiểm tra tình trạng phòng và liên hệ khách qua số điện thoại trên.
-          </div>
-        </div>
+        <h2>SĀKURĀ RETREAT — Yêu cầu đặt lịch mới</h2>
+        <p><strong>Khách:</strong> ${escapeHtml(guestName)}</p>
+        <p><strong>Điện thoại:</strong> ${escapeHtml(guestPhone)}</p>
+        <p><strong>Dịch vụ:</strong> ${escapeHtml(data.serviceName)}</p>
+        <p><strong>Thời lượng:</strong> ${escapeHtml(data.duration)} phút</p>
+        <p><strong>Giá niêm yết:</strong> ${formatMoney(data.listedPrice)} VND</p>
+        <p><strong>Giá website:</strong> ${formatMoney(data.websitePrice)} VND</p>
+        <p><strong>Ngày:</strong> ${escapeHtml(bookingDate)}</p>
+        <p><strong>Giờ:</strong> ${escapeHtml(data.time)}</p>
+        <p><strong>Ghi chú:</strong> ${escapeHtml(guestNote || "Không có")}</p>
       </div>
     `;
 
@@ -223,49 +151,52 @@ async function handleBookingRequest(
 
     return Response.json({
       ok: true,
-      messageId: result.messageId,
+      messageId: result?.messageId ?? null,
     });
   } catch (error) {
     console.error("Booking email failed", error);
-
     return Response.json(
-      {
-        ok: false,
-        error: "Unable to send booking request",
-      },
+      { ok: false, error: "Unable to send booking request" },
       { status: 500 },
     );
   }
 }
-const worker = {  
-async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+
+const worker = {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname === "/_vinext/image") {
-  const url = new URL(request.url);
+    if (url.pathname === "/api/booking") {
+      if (request.method !== "POST") {
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers: { Allow: "POST" },
+        });
+      }
 
-  if (url.pathname === "/api/booking") {
-    if (request.method !== "POST") {
-      return new Response("Method Not Allowed", {
-        status: 405,
-        headers: {
-          Allow: "POST",
-        },
-      });
+      return handleBookingRequest(request, env);
     }
 
-    return handleBookingRequest(request, env);
-  }
-
-  if (url.pathname === "/_vinext/image") {
+    if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
-      return handleImageOptimization(request, {
-        fetchAsset: (path) => env.ASSETS.fetch(new Request(new URL(path, request.url))),
-        transformImage: async (body, { width, format, quality }) => {
-          const result = await env.IMAGES.input(body).transform(width > 0 ? { width } : {}).output({ format, quality });
-          return result.response();
+      return handleImageOptimization(
+        request,
+        {
+          fetchAsset: (path) =>
+            env.ASSETS.fetch(new Request(new URL(path, request.url))),
+          transformImage: async (body, { width, format, quality }) => {
+            const result = await env.IMAGES.input(body)
+              .transform(width > 0 ? { width } : {})
+              .output({ format, quality });
+            return result.response();
+          },
         },
-      }, allowedWidths);
+        allowedWidths,
+      );
     }
 
     return handler.fetch(request, env, ctx);

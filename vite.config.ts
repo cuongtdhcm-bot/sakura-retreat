@@ -24,7 +24,7 @@ const localBindingConfig = {
         "maimummim1989@gmail.com",
       ],
     },
-  ],,
+  ],
   d1_databases: d1
     ? [
         {

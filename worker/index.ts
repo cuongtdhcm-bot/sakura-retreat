@@ -241,7 +241,7 @@ const worker = {
 async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname === "/_vinext/image") {async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    if (url.pathname === "/_vinext/image") {
   const url = new URL(request.url);
 
   if (url.pathname === "/api/booking") {

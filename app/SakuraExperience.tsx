@@ -534,6 +534,7 @@ export default function SakuraExperience() {
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestNote, setGuestNote] = useState("");
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [qrChannel, setQrChannel] = useState<QrChannel>(null);
   const bookingRef = useRef<HTMLDivElement>(null);
@@ -691,11 +692,72 @@ export default function SakuraExperience() {
     window.open(ZALO_URL, "_blank", "noopener,noreferrer");
   }
 
-  function submitBooking(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!guestName.trim() || guestPhone.replace(/\D/g, "").length < 9) return;
-    setBookingStep(6);
+  async function submitBooking(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+
+  if (
+    !guestName.trim() ||
+    guestPhone.replace(/\D/g, "").length < 9 ||
+    !selectedDate ||
+    !selectedTime
+  ) {
+    return;
   }
+
+  if (bookingSubmitting) return;
+
+  setBookingSubmitting(true);
+
+  try {
+    const response = await fetch("/api/booking", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        guestName: guestName.trim(),
+        guestPhone: guestPhone.trim(),
+        guestNote: guestNote.trim(),
+
+        serviceId: selectedService.sku ?? selectedService.id,
+        serviceName: selectedService.name,
+        serviceEnglishName: selectedService.englishName,
+        duration: selectedService.duration,
+
+        listedPrice: selectedService.price,
+        websitePrice: webPrice(selectedService.price),
+
+        date: selectedDate,
+        formattedDate: formatBookingDate(selectedDate, lang),
+        time: selectedTime,
+
+        language: lang,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Booking request failed");
+    }
+
+    const result = await response.json();
+
+    if (!result.ok) {
+      throw new Error(result.error ?? "Booking request failed");
+    }
+
+    setBookingStep(6);
+  } catch (error) {
+    console.error(error);
+
+    window.alert(
+      lang === "vi"
+        ? "SĀKURĀ chưa nhận được yêu cầu đặt lịch. Vui lòng thử lại hoặc liên hệ Concierge qua Zalo."
+        : "SĀKURĀ could not receive your reservation request. Please try again or contact Concierge via Zalo.",
+    );
+  } finally {
+    setBookingSubmitting(false);
+  }
+}
 
   const renderServiceDetail = (service: RetreatService, mobile = false) => (
     <div className={`service-detail-content ${mobile ? "mobile" : ""}`}>

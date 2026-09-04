@@ -28,7 +28,7 @@ export const services: RetreatService[] = [
       "Làm sạch dịu nhẹ, loại bỏ bụi bẩn và dầu thừa trên bề mặt, giúp da có cảm giác sạch, thông thoáng và dễ chịu hơn.",
     duration: 60,
     price: 499000,
-    image: "/images/facial-opener.webp",
+    image: "/images/skin-balance.webp",
   },
   {
     id: "AC017",
@@ -42,7 +42,7 @@ export const services: RetreatService[] = [
       "Chăm sóc nhiều bước tập trung làm sạch bề mặt, hỗ trợ kiểm soát cảm giác dầu thừa và duy trì bề mặt da sạch, thoáng, cân bằng hơn.",
     duration: 90,
     price: 999000,
-    image: "/images/facial-opener.webp",
+    image: "/images/surface-renewal.webp",
   },
   {
     id: "FF021",
@@ -274,10 +274,10 @@ export const services: RetreatService[] = [
     category: "body",
     collection: "Body Retreat",
     level: "Essential",
-    name: "Thư Giãn Vùng Cổ Vai",
+    name: "Thư Giãn Vùng Cổ Vai Gáy",
     englishName: "Neck & Shoulder Relaxing Care",
     description:
-      "Tập trung chăm sóc thư giãn vùng cổ và vai bằng các thao tác nhẹ nhàng bên ngoài, phù hợp cho khách muốn dành thời gian nghỉ ngơi sau khi ngồi hoặc làm việc lâu.",
+      "Tập trung chăm sóc thư giãn vùng cổ, vai và gáy bằng các thao tác nhẹ nhàng bên ngoài, phù hợp cho khách muốn dành thời gian nghỉ ngơi sau khi ngồi hoặc làm việc lâu.",
     duration: 60,
     price: 499000,
     image: "/images/neck-shoulder.webp",

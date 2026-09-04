@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s | SĀKURĀ RETREAT",
   },
   description:
-    "Rời nhịp phố và bước vào một khoảng riêng tại SĀKURĀ — Private Botanical Skin & Body Retreat trong villa phủ xanh giữa Trung Sơn, Hồ Chí Minh.",
+    "SĀKURĀ Retreat tại villa phủ xanh giữa Trung Sơn – Him Lam. Signature Welcome cho khách lần đầu: Body 399K, Face 599K hoặc Face & Body 999K trong không gian riêng.",
   keywords: [
     "SĀKURĀ RETREAT",
     "chăm sóc da Trung Sơn",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     url: "https://sakuraretreat.vn",
     siteName: "SĀKURĀ RETREAT",
     title: "SĀKURĀ RETREAT — The Signature Private Retreat",
-    description: "Rời nhịp phố. Bước vào một khoảng riêng. Khám phá Facial & Body Retreat và đặt lịch trực tiếp cùng SĀKURĀ Concierge.",
+    description: "Ba Signature Welcome cho khách lần đầu tại SĀKURĀ: Body 399K, Face 599K hoặc Face & Body 999K trong không gian riêng.",
     images: [
       {
         url: "/og-sakura-retreat.jpg",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "SĀKURĀ RETREAT — The Signature Private Retreat",
-    description: "Rời nhịp phố. Bước vào một khoảng riêng tại Private Botanical Skin & Body Retreat ở Trung Sơn, Hồ Chí Minh.",
+    description: "Signature Welcome tại SĀKURĀ Retreat: Body 399K, Face 599K hoặc Face & Body 999K dành cho khách lần đầu trải nghiệm.",
     images: ["/og-sakura-retreat.jpg"],
   },
   icons: {

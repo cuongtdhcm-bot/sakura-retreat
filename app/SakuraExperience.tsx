@@ -439,6 +439,7 @@ export default function SakuraExperience() {
     let touchStartY: number | null = null;
     let touchLastY: number | null = null;
     let touchCaptured = false;
+    let measuredViewportWidth = window.innerWidth;
 
     const activateScene = (requestedIndex: number) => {
       const active = Math.max(0, Math.min(scenes.length - 1, requestedIndex));
@@ -470,6 +471,17 @@ export default function SakuraExperience() {
       journeyTop = window.scrollY + journey.getBoundingClientRect().top;
       snapOffsets = [0, ...steps.map((step) => window.scrollY + step.getBoundingClientRect().top - journeyTop)];
       scheduleJourney();
+    };
+
+    const onJourneyResize = () => {
+      const isMobileViewport = window.matchMedia("(max-width: 760px)").matches;
+      const widthChanged = Math.abs(window.innerWidth - measuredViewportWidth) > 1;
+      if (isMobileViewport && !widthChanged) {
+        scheduleJourney();
+        return;
+      }
+      measuredViewportWidth = window.innerWidth;
+      measureJourney();
     };
 
     const closestScene = () => {
@@ -578,7 +590,7 @@ export default function SakuraExperience() {
     scenes.forEach((scene) => scene.querySelectorAll("img").forEach((image) => image.decode?.().catch(() => undefined)));
     updateJourney();
     window.addEventListener("scroll", scheduleJourney, { passive: true });
-    window.addEventListener("resize", measureJourney, { passive: true });
+    window.addEventListener("resize", onJourneyResize, { passive: true });
     journey.addEventListener("wheel", onWheel, { passive: false });
     journey.addEventListener("touchstart", onTouchStart, { passive: true });
     journey.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -587,7 +599,7 @@ export default function SakuraExperience() {
     window.addEventListener("keydown", onJourneyKeyDown);
     return () => {
       window.removeEventListener("scroll", scheduleJourney);
-      window.removeEventListener("resize", measureJourney);
+      window.removeEventListener("resize", onJourneyResize);
       journey.removeEventListener("wheel", onWheel);
       journey.removeEventListener("touchstart", onTouchStart);
       journey.removeEventListener("touchmove", onTouchMove);
@@ -611,9 +623,23 @@ export default function SakuraExperience() {
   }, []);
 
   function scrollTo(id: string) {
+    const menuWasOpen = menuOpen;
     setMenuOpen(false);
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    document.getElementById(id)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    const move = () => {
+      const target = document.getElementById(id);
+      if (!target) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const mobile = window.matchMedia("(max-width: 760px)").matches;
+      if (mobile) {
+        const headerHeight = document.querySelector<HTMLElement>(".site-header")?.getBoundingClientRect().height ?? 68;
+        const targetTop = window.scrollY + target.getBoundingClientRect().top - headerHeight - 8;
+        window.scrollTo({ top: Math.max(0, targetTop), left: 0, behavior: "auto" });
+        return;
+      }
+      target.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    };
+    if (menuWasOpen) window.setTimeout(move, 320);
+    else move();
   }
 
   function goToJourneyScene(index: number) {
@@ -820,7 +846,7 @@ export default function SakuraExperience() {
       </main>
 
       <footer className="site-footer"><div className="footer-brand"><img src="/brand/sakura-lockup.png" alt="SĀKURĀ Retreat" loading="lazy" /><p>{copy.footer.line}</p><span>{copy.footer.idea}</span></div><div className="footer-info"><div><small>VISIT</small><span>{copy.visit.address}</span></div><div><small>{lang === "vi" ? "HỖ TRỢ ĐẶT LỊCH" : "RESERVATION ASSISTANCE"}</small><a className="phone-number" href={`tel:${PHONE_NUMBER}`}>{PHONE_DISPLAY}</a></div><div><small>OPENING HOURS</small><span>{copy.footer.hours}</span></div></div><div className="footer-bottom"><span>© 2026 SĀKURĀ RETREAT</span><div><a href={ZALO_URL} target="_blank" rel="noreferrer">ZALO</a><a href={WHATSAPP_URL} target="_blank" rel="noreferrer">WHATSAPP</a><a href={DIRECTIONS_URL} target="_blank" rel="noreferrer">GOOGLE MAPS</a><button type="button" onClick={() => scrollTo("arrival")}>{copy.footer.top} ↑</button></div></div></footer>
-      <button className="mobile-reserve" type="button" onClick={() => openBooking({ offerId: "FIRST-BODY-90" })}><span><small>{local.mobile.eyebrow}</small>{local.mobile.cta}</span><CalendarIcon /></button>
+      {!menuOpen && !bookingOpen && !sheetServiceId && !qrChannel && <button className="mobile-reserve" type="button" onClick={() => openBooking({ offerId: "FIRST-BODY-90" })}><span><small>{local.mobile.eyebrow}</small>{local.mobile.cta}</span><CalendarIcon /></button>}
 
       {sheetService && <div className="service-sheet" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSheetServiceId(null); }}><div role="dialog" aria-modal="true" aria-labelledby="sheet-title"><button type="button" className="sheet-close" onClick={() => setSheetServiceId(null)} aria-label={copy.collection.close}><CloseIcon /></button><div className="sheet-image"><img src={sheetService.image} alt="" /><span>{sheetService.collection}</span></div><div id="sheet-title">{renderServiceDetail(sheetService, true)}</div></div></div>}
       {qrChannel && <div className="qr-modal" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setQrChannel(null); }}><div role="dialog" aria-modal="true" aria-labelledby="qr-title"><button type="button" onClick={() => setQrChannel(null)} aria-label={copy.concierge.closeQr}><CloseIcon /></button><p>INTERNATIONAL GUEST ASSISTANCE</p><h2 id="qr-title">{qrChannel.name}</h2><img src={qrChannel.image} alt={`${qrChannel.name} QR code`} /><span>{copy.concierge.scan}</span></div></div>}
